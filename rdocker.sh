@@ -4,9 +4,9 @@ re='^[0-9]+$'
 if [[ ( $# -ne 1 && $# -ne 2 ) || $1 == "-h" || $1 == "-help" || ($# -eq 2 && ! $2 =~ $re) ]]; then
     echo "Usage: rdocker [-h|-help] [user@]hostname [port]"
     echo ""
+    echo "    -h -help        print this message"
     echo "    user@hostname   ssh remote login address"
     echo "    port            local port used to forward the remote docker daemon"
-    echo "    -h -help        print this message"
     exit
 fi
 
