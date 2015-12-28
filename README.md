@@ -1,6 +1,6 @@
 # Remote Docker
 
-Securely control a remote docker daemon using ssh forwarding, effectively avoiding the SSL setup.
+Securely control a remote docker daemon using ssh forwarding, no SSL setup needed.
 
 ##Usage
 
