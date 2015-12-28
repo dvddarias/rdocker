@@ -1,6 +1,23 @@
 #!/bin/bash
 # set -e
-remote_port=${2-22522}
+
+if [[  $# -ne 1 || $1 == "-h" || $1 == "-help" ]]; then
+    echo "Usage: ./rdocker [-h|-help] user@hostname"
+    exit
+fi
+
+control_path="$HOME/.rdocker-master-`date +%s%N`"
+
+ssh ${1} -nNf -o ControlMaster=yes -o ControlPath="$control_path" -o ControlPersist=yes
+
+if [ ! -S "$control_path" ]; then
+    exit
+fi
+
+find_port_code="import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));print(s.getsockname()[1]);s.close()"
+
+remote_port=$(ssh ${1} -o ControlPath=$control_path python -c \"$find_port_code\")
+
 success_msg="Connection established"
 forwarder="
 import threading,socket,select,signal,sys,os
@@ -68,32 +85,29 @@ if __name__ == \"__main__\":
     main()
 "
 
+# find an unused local port
+# create a temporary named pipe and attach it to file descriptor 3
+PIPE=$(mktemp -u); mkfifo $PIPE
+exec 3<>$PIPE; rm $PIPE
+# execute ssh in background
+local_port=$(python -c "$find_port_code")
 remote_script_path="/tmp/rdocker-forwarder.py"
+printf "$forwarder" | ssh ${1} -o ControlPath=$control_path -o ExitOnForwardFailure=yes -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
+CONNECTION_PID=$!
+# wait for it's output
+read -u 3 -d . line
+exec 3>&-
 
-if [[ ( $# -eq 1 || $# -eq 2 ) && $1 != "-h" && $1 != "-help" ]]; then
-    # find an unused local port
-    local_port=$(python -c "import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));print(s.getsockname()[1]);s.close()")
-    # create a temporary named pipe and attach it to file descriptor 3
-    PIPE=$(mktemp -u); mkfifo $PIPE
-    exec 3<>$PIPE; rm $PIPE
-    # execute ssh in background
-    printf "$forwarder" | ssh ${1} -o ExitOnForwardFailure=yes -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
-    CONNECTION_PID=$!
-    # wait for it's output
-    read -u 3 -d . line
-    exec 3>&-
-
-    if [[ $line == $success_msg ]]; then
-        echo "Starting a new shell session with docker host set to \"localhost:${local_port}\"."
-        echo "Press Ctrl+D to exit."
-        export DOCKER_HOST="tcp://localhost:${local_port}"
-        bash
-        kill -15 $CONNECTION_PID
-        echo "Disconnected from ${1} docker daemon."
-    else
-        echo $line
-    fi
-    exit
+if [[ $line == $success_msg ]]; then
+    echo "Starting a new shell session with docker host set to \"localhost:${local_port}\"."
+    echo "Press Ctrl+D to exit."
+    export DOCKER_HOST="tcp://localhost:${local_port}"
+    bash
+    kill -15 $CONNECTION_PID
+    echo "Disconnected from ${1} docker daemon."
 else
-    echo "Usage: ./rdocker [-h] user@hostname [port]"
+    echo $line
 fi
+
+ssh -O exit -o ControlPath="$control_path" ${1} 2> /dev/null
+rm -f "$control_path"
