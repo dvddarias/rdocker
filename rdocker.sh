@@ -2,7 +2,7 @@
 # set -e
 
 if [[  $# -ne 1 || $1 == "-h" || $1 == "-help" ]]; then
-    echo "Usage: ./rdocker [-h|-help] user@hostname"
+    echo "Usage: rdocker [-h|-help] [user@]hostname"
     exit
 fi
 
