@@ -37,7 +37,7 @@ To stop controlling the remote daemon and close the ssh forwarding, just exit th
 **Basically None**. If you can login to your server over ssh and run docker commands this script should work out of the box.
 
 Just remember:
-- The user you log in with should have permissions access the `/var/run/docker.sock`.
+- The user you log in with should have permissions access the `/var/run/docker.sock` otherwise you will get a lot of: `An error occurred trying to connect...`. To solve this [add the user to the docker group](https://docs.docker.com/engine/installation/ubuntulinux/#create-a-docker-group).
 - It uses `ssh` to connect to the host so you should also have the the appropriate permissions (private-key, password, etc..).
 - On the remote host it uses: python, bash, and ssh but these are already installed on most linux distributions.
 - Needless to say you need `docker` installed on both computers ;).

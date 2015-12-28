@@ -59,7 +59,13 @@ def main():
 def serve_client(tcp_socket):
     global running
     uds_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    uds_socket.connect(\"/var/run/docker.sock\")
+    try:
+        uds_socket.connect(\"/var/run/docker.sock\")
+    except socket.error as msg:
+        uds_socket.close()
+        tcp_socket.close()
+        return
+
     rlist = [tcp_socket, uds_socket]
     while running:
         readable, writable, exceptional = select.select(rlist, [], [], 0.5)
