@@ -72,7 +72,7 @@ remote_script_path="/tmp/rdocker-forwarder.py"
 
 if [[ ( $# -eq 1 || $# -eq 2 ) && $1 != "-h" && $1 != "-help" ]]; then
     # find an unused local port
-    local_port=$(python -c "import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));addr=s.getsockname();print addr[1];s.close()")
+    local_port=$(python -c "import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));print(s.getsockname()[1]);s.close()")
     # create a temporary named pipe and attach it to file descriptor 3
     PIPE=$(mktemp -u); mkfifo $PIPE
     exec 3<>$PIPE; rm $PIPE
