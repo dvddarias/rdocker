@@ -26,15 +26,15 @@ To stop controlling the remote daemon and close the ssh forwarding, just exit th
 
 The user you log in with should have permissions access the `/var/run/docker.sock`. It uses `ssh` to connect to the host so you should also have the the appropriate permissions. There are **no dependencies on the remote host** other than: python2, bash, and ssh that are already installed on most linux distributions.
 
-The forwarding uses by default the port `22522` on the remote host and the local machine so it will fail if it is already in use. If you want to use another port, for example 12345, run `./rdocker.sh user@myamazingweb.com 12345`.
+The forwarding uses by default the port `22522` on the remote host so it will fail if it is already in use. If you want to use another port, for example 12345, run `./rdocker.sh user@myamazingweb.com 12345`.
 
 ##How does it work
 
 This is a general overview of how it works, feel free to check the script for further details:
 
- 1. Connects over ssh to the remote host and forwards the local 22522 port to the remote 22522 port
+ 1. Connects over ssh to the remote host and forwards a local port to the remote 22522 port
  2. Runs over the ssh connection a python script that forwards connections on the remote host from `localhost:22522` to the unix domain socket at `/var/run/docker.sock`
- 2. Starts a new bash session with DOCKER_HOST environment variable set to `tcp://localhost:22522`
+ 2. Starts a new bash session with DOCKER_HOST environment variable set to `tcp://localhost:local_port`
  3. On session exit it SIGTERMs the ssh connection.
 
 Contributions are of course welcome.

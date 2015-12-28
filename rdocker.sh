@@ -1,6 +1,6 @@
 #!/bin/bash
 # set -e
-port=${2-22522}
+remote_port=${2-22522}
 success_msg="Connection established"
 forwarder="
 import threading,socket,select,signal,sys,os
@@ -15,7 +15,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 def main():
     global running
-    addr = (\"localhost\",$port)
+    addr = (\"localhost\",$remote_port)
     server = socket.socket()
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
@@ -23,7 +23,7 @@ def main():
         server.listen(50)
     except socket.error as msg:
         server.close()
-        print \"Port $port is already taken.\"
+        print \"Port $remote_port is already taken.\"
         sys.exit(0)
     print \"${success_msg}.\"
     rlist = [server]
@@ -71,18 +71,22 @@ if __name__ == \"__main__\":
 remote_script_path="/tmp/rdocker-forwarder.py"
 
 if [[ ( $# -eq 1 || $# -eq 2 ) && $1 != "-h" && $1 != "-help" ]]; then
+    # find an unused local port
+    local_port=$(python -c "import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));addr=s.getsockname();print addr[1];s.close()")
     # create a temporary named pipe and attach it to file descriptor 3
     PIPE=$(mktemp -u); mkfifo $PIPE
     exec 3<>$PIPE; rm $PIPE
-    printf "$forwarder" | ssh ${1} -o ExitOnForwardFailure=yes -L localhost:$port:localhost:$port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
+    # execute ssh in background
+    printf "$forwarder" | ssh ${1} -o ExitOnForwardFailure=yes -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
     CONNECTION_PID=$!
+    # wait for it's output
     read -u 3 -d . line
     exec 3>&-
 
     if [[ $line == $success_msg ]]; then
-        echo "Starting a new shell session with docker host set to ${1}."
+        echo "Starting a new shell session with docker host set to \"localhost:${local_port}\"."
         echo "Press Ctrl+D to exit."
-        export DOCKER_HOST="tcp://localhost:${port}"
+        export DOCKER_HOST="tcp://localhost:${local_port}"
         bash
         kill -15 $CONNECTION_PID
         echo "Disconnected from ${1} docker daemon."
