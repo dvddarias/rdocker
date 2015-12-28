@@ -1,13 +1,10 @@
 #!/bin/bash
 # set -e
-
-port=${2-12345}
+port=${2-22522}
 success_msg="Connection established"
 forwarder="
 import threading,socket,select,signal,sys,os
-
 running = True
-
 def signal_handler(signal, frame):
     global running
     running = False
@@ -52,14 +49,13 @@ def serve_client(tcp_socket):
 
         if tcp_socket in readable:
             data = tcp_socket.recv(4096)
-            if not data or not running:
-                break
+            if not data or not running: break
             else:
                 uds_socket.sendall(data)
 
         if uds_socket in readable:
             data = uds_socket.recv(4096)
-            if not data: break
+            if not data or not running: break
             else:
                 tcp_socket.sendall(data)
 
@@ -72,25 +68,24 @@ if __name__ == \"__main__\":
     main()
 "
 
-config_file=$HOME/.rdocker.info
+remote_script_path="/tmp/rdocker-forwarder.py"
 
 if [[ ( $# -eq 1 || $# -eq 2 ) && $1 != "-h" && $1 != "-help" ]]; then
     # create a temporary named pipe and attach it to file descriptor 3
     PIPE=$(mktemp -u); mkfifo $PIPE
     exec 3<>$PIPE; rm $PIPE
-    printf "$forwarder" | ssh ${1} -L localhost:$port:localhost:$port "cat > /tmp/forward.py; exec python -u /tmp/forward.py;" 1>&3 &
+    printf "$forwarder" | ssh ${1} -o ExitOnForwardFailure=yes -L localhost:$port:localhost:$port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
     CONNECTION_PID=$!
     read -u 3 -d . line
     exec 3>&-
 
     if [[ $line == $success_msg ]]; then
-        echo $line
         echo "Starting a new shell session with docker host set to ${1}."
         echo "Press Ctrl+D to exit."
         export DOCKER_HOST="tcp://localhost:${port}"
         bash
         kill -15 $CONNECTION_PID
-        echo "Remote docker disconnected from ${1}."
+        echo "Disconnected from ${1} docker daemon."
     else
         echo $line
     fi
