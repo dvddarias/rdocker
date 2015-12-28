@@ -35,6 +35,7 @@ This is a general overview of how it works, feel free to check the script for fu
  3. Starts a new bash session with DOCKER_HOST environment variable set to `tcp://localhost:local_port`
  4. On session exit it SIGTERMs the ssh connection.
 
+Tested on Ubuntu, Mint and Debian. It should work on any linux based OS. I don't have a Mac around to test it :(.
 Contributions are of course welcome.
 
 
