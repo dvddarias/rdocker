@@ -18,7 +18,7 @@ To test the connection run:
 Check the `Name:` field it should have the remote hostname. That's it!!!
 
 You could for example run `docker build` to build an image on the remote host and then `docker save -o myimage.tar image_name` to store it locally.
-Or maybe run 'docker exec -it container_name bash' to open a shell session on a remote container. Even bash auto-completion works ok.
+Or maybe run `docker exec -it container_name bash` to open a shell session on a remote container. Even bash auto-completion works ok.
 
 To stop controlling the remote daemon and close the ssh forwarding, just exit the bash session (press `Ctrl+D`).
 
