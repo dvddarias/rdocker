@@ -2,20 +2,30 @@
 
 Securely control a remote docker daemon using ssh forwarding, no SSL setup needed.
 
-##Usage
+##Install
 
-Lets assume you want to control the docker daemon on your `myamazingweb.com` server from your local machine. You would run:
+If you want it available on your system run the following (you may need elevated privileges for this to work):
+
+    curl -L https://github.com/dvddarias/rdocker/raw/master/rdocker.sh > /usr/local/bin/rdocker
+    chmod +x /usr/local/bin/rdocker
+
+If you just want it lying around on your file system:
 
     git clone https://github.com/dvddarias/rdocker.git
     cd rdocker
-    ./rdocker.sh user@myamazingweb.com
+
+##Usage
+
+Lets assume you want to control the docker daemon on your `myamazingweb.com` server from your local machine. You just run:
+
+    rdocker user@myamazingweb.com
 
 This will open a new bash session with a new DOCKER_HOST variable setup. Any `docker` command you execute will take place on the remote docker daemon.
 To test the connection run:
 
     docker info
 
-Check the `Name:` field it should have the remote hostname. That's it!!!
+Check the `Name:` field it should have the remote hostname .... That's it!!!
 
 You could for example run `docker build` to build an image on the remote host and then `docker save -o myimage.tar image_name` to store it locally.
 Or maybe run `docker exec -it container_name bash` to open a shell session on a remote container. Even bash auto-completion works ok.
