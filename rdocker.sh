@@ -1,8 +1,12 @@
 #!/bin/bash
 # set -e
-
-if [[  $# -ne 1 || $1 == "-h" || $1 == "-help" ]]; then
-    echo "Usage: rdocker [-h|-help] [user@]hostname"
+re='^[0-9]+$'
+if [[ ( $# -ne 1 && $# -ne 2 ) || $1 == "-h" || $1 == "-help" || ($# -eq 2 && ! $2 =~ $re) ]]; then
+    echo "Usage: rdocker [-h|-help] [user@]hostname [port]"
+    echo ""
+    echo "    user@hostname   ssh remote login address"
+    echo "    port            local port used to forward the remote docker daemon"
+    echo "    -h -help        print this message"
     exit
 fi
 
@@ -95,18 +99,20 @@ if __name__ == \"__main__\":
 # create a temporary named pipe and attach it to file descriptor 3
 PIPE=$(mktemp -u); mkfifo $PIPE
 exec 3<>$PIPE; rm $PIPE
-# execute ssh in background
-local_port=$(python -c "$find_port_code")
+# find a free port or use the provided one
+local_port=${2:-$(python -c "$find_port_code")}
+
 remote_script_path="/tmp/rdocker-forwarder.py"
-printf "$forwarder" | ssh ${1} -o ControlPath=$control_path -o ExitOnForwardFailure=yes -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
+printf "$forwarder" | ssh ${1} -o ControlPath=$control_path -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
 CONNECTION_PID=$!
 # wait for it's output
 read -u 3 -d . line
 exec 3>&-
 
 if [[ $line == $success_msg ]]; then
-    echo "Starting a new shell session with docker host set to \"localhost:${local_port}\"."
-    echo "Press Ctrl+D to exit."
+    echo "Remote docker daemon listening on localhost:${local_port}."
+    echo "Press Ctrl+D to exit and stop forwarding."
+    echo "Starting a new bash session."
     export DOCKER_HOST="tcp://localhost:${local_port}"
     bash
     kill -15 $CONNECTION_PID
