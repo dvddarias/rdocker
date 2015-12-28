@@ -34,11 +34,12 @@ To stop controlling the remote daemon and close the ssh forwarding, just exit th
 
 ##Dependencies & Configuration
 
-**Basically None**. If you can start an ssh connection to your server this script should work out of the box.
+**Basically None**. If you can login to your server over ssh this script should work out of the box.
+
 Just remember:
 - The user you log in with should have permissions access the `/var/run/docker.sock`.
 - It uses `ssh` to connect to the host so you should also have the the appropriate permissions.
-- There are **no dependencies on the remote host** other than: python2, bash, and ssh that are already installed on most linux distributions.
+- There are **no dependencies on the remote host** other than: python, bash, and ssh that are already installed on most linux distributions.
 
 ##How does it work
 
