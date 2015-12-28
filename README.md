@@ -1,4 +1,4 @@
-# Remote Docker
+# rDocker
 
 Securely control a remote docker daemon using ssh forwarding, no SSL setup needed.
 
