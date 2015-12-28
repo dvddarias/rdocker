@@ -16,9 +16,9 @@ If you just want it lying around on your file system:
 
 ##Usage
 
-Lets assume you want to control the docker daemon on your `myamazingweb.com` server from your local machine. You just run:
+Lets assume you want to control the docker daemon on your `webserver.com` server from your local machine. You just run:
 
-    rdocker user@myamazingweb.com
+    rdocker user@webserver.com
 
 This will open a new bash session with a new DOCKER_HOST variable setup. Any `docker` command you execute will take place on the remote docker daemon.
 To test the connection run:
@@ -40,7 +40,7 @@ The user you log in with should have permissions access the `/var/run/docker.soc
 
 This is a general overview of how it works, feel free to check the script for further details:
 
- 1. Connects over ssh to the remote host and finds a free port on both computers
+ 1. Connects over ssh to the remote host, finds a free port on both computers, and opens ssh forwarding
  2. Runs over the ssh connection a python script that forwards connections on the remote host from `localhost:remote_port` to the unix domain socket at `/var/run/docker.sock`
  3. Starts a new bash session with DOCKER_HOST environment variable set to `tcp://localhost:local_port`
  4. On session exit it SIGTERMs the ssh connection.
