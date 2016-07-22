@@ -1,15 +1,12 @@
 #!/bin/bash
 # set -e
 re='^[0-9]+$'
-
-#Removed some parameters checking
-if [[ ( $# -ne 1 && $# -ne 2 && $# -ne 3 ) || $1 == "-h" || $1 == "-help" ]]; then
-    echo "Usage: rdocker [-h|-help] [user@]hostname [port] [cmd]"
+if [[ ( $# -ne 1 && $# -ne 2 ) || $1 == "-h" || $1 == "-help" || ($# -eq 2 && ! $2 =~ $re) ]]; then
+    echo "Usage: rdocker [-h|-help] [user@]hostname [port]"
     echo ""
     echo "    -h -help        print this message"
     echo "    user@hostname   ssh remote login address"
     echo "    port            local port used to forward the remote docker daemon"
-    echo "    cmd             command to be executed through bash -c"
     exit
 fi
 
@@ -103,11 +100,7 @@ if __name__ == \"__main__\":
 PIPE=$(mktemp -u); mkfifo $PIPE
 exec 3<>$PIPE; rm $PIPE
 # find a free port or use the provided one
-if [[ $2 =~ $re ]]; then
-    local_port=$2
-else
-    local_port=$(python -c "$find_port_code")
-fi
+local_port=${2:-$(python -c "$find_port_code")}
 
 remote_script_path="/tmp/rdocker-forwarder.py"
 printf "$forwarder" | ssh ${1} -o ControlPath=$control_path -L localhost:$local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
@@ -121,15 +114,7 @@ if [[ $line == $success_msg ]]; then
     echo "Press Ctrl+D to exit and stop forwarding."
     echo "Starting a new bash session."
     export DOCKER_HOST="tcp://localhost:${local_port}"
-    
-    if [[ ($# -eq 2 && ! $2 =~ $re) ]]; then
-        bash -c "$2"
-    elif [[ ($# -eq 3) ]]; then
-        bash -c "$3"
-    else
-        bash
-    fi
-    
+    bash
     kill -15 $CONNECTION_PID
     echo "Disconnected from ${1} docker daemon."
 else
