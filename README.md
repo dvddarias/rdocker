@@ -1,6 +1,6 @@
 # rDocker
 
-Securely control a remote docker daemon using ssh forwarding, no SSL setup needed.
+Securely control a remote docker daemon CLI using ssh forwarding, no SSL setup needed.
 
 ##Install
 
