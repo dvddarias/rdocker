@@ -34,6 +34,8 @@ remote_port=$(ssh ${remote_host} -o ControlPath=${control_path} python -c \"$fin
 
 if [ -z $remote_port ]; then
     echo "ERROR: Failed to find a free port. This usually happens when python is not installed on the remote host."
+    #clear the ssh control connection
+    ssh -O exit -o ControlPath="$control_path" $remote_host 2> /dev/null
     rm -f "$control_path"
     exit 1
 fi
@@ -133,19 +135,29 @@ if [[ $line == $success_msg ]]; then
         bash -c "$command"
         exit_status=$?
         kill -15 $CONNECTION_PID
+        #clear the ssh control connection
+        ssh -O exit -o ControlPath="$control_path" $remote_host 2> /dev/null
+        rm -f "$control_path"
+        #exit with the same status as the command
         exit $exit_status
     else
-        echo "Remote docker daemon listening on localhost:${local_port}."
-        echo "Press Ctrl+D to exit and stop forwarding."
-        echo "Starting a new bash session."
+        COLOR='\033[0;33m'
+        NC='\033[0m'
+        RED='\033[1;31m'
+
+        echo -e "Local docker client connected to ${COLOR}${remote_host}${NC} docker daemon."
+        echo "Route: localhost:${local_port} -> ${remote_host}:${remote_port}"
+        echo -e "Press ${RED}Ctrl+D${NC} to stop forwarding and exit the bash session."
+        export PROMPT_COMMAND="echo -en \"${COLOR}docker:${remote_host}${NC} \""
         bash
     fi
 
     kill -15 $CONNECTION_PID
-    echo "Disconnected from $remote_host docker daemon."
+    echo -e "Disconnected from ${COLOR}$remote_host${NC} docker daemon."
 else
     echo $line
 fi
 
+#clear the ssh control connection
 ssh -O exit -o ControlPath="$control_path" $remote_host 2> /dev/null
 rm -f "$control_path"
