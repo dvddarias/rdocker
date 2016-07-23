@@ -6,8 +6,8 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "-help" ]]; then
     echo ""
     echo "    -h -help        print this message"
     echo "    user@hostname   ssh remote login address"
-    echo "    port            local port used to forward the remote docker daemon"
-    echo "    cmd             when provided we execute it for you, instead of creating a new bash session"
+    echo "    port            local port used to forward the remote docker daemon, if not present a free random port will be used"
+    echo "    cmd             when provided, it is the only command run on the remote host (no bash session is created)"
     exit
 fi
 
