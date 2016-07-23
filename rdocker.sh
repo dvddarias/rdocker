@@ -33,7 +33,8 @@ find_port_code="import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM
 remote_port=$(ssh ${remote_host} -o ControlPath=${control_path} python -c \"$find_port_code\")
 
 if [ -z $remote_port ]; then
-    echo "FAILED TO ALLOCATE REMOTE PORT... Verify if your remote host has python installed"
+    echo "ERROR: Failed to find a free port. This usually happens when python is not installed on the remote host."
+    rm -f "$control_path"
     exit 1
 fi
 
@@ -41,6 +42,7 @@ success_msg="Connection established"
 forwarder="
 import threading,socket,select,signal,sys,os
 running = True
+remote_port = $remote_port
 def signal_handler(signal, frame):
     global running
     running = False
@@ -51,7 +53,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 def main():
     global running
-    addr = (\"localhost\",$remote_port)
+    addr = (\"localhost\", remote_port)
     server = socket.socket()
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
@@ -59,9 +61,9 @@ def main():
         server.listen(50)
     except socket.error as msg:
         server.close()
-        print \"Port $remote_port is already taken.\"
+        print(\"Port \" + remote_port + \" is already in use.\")
         sys.exit(0)
-    print \"${success_msg}.\"
+    print(\"${success_msg}.\")
     rlist = [server]
     while running:
         readable, writable, exceptional = select.select(rlist, [], [], 0.5)
