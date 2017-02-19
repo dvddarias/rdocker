@@ -116,7 +116,7 @@ if __name__ == \"__main__\":
 
 # find an unused local port
 # create a temporary named pipe and attach it to file descriptor 3
-PIPE=$(mktemp -u); mkfifo $PIPE
+PIPE=$(mktemp -u rdocXXX); mkfifo $PIPE
 exec 3<>$PIPE; rm $PIPE
 # find a free port or use the provided one
 local_port=${local_port:-$(python -c "$find_port_code")}
