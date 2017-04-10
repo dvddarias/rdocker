@@ -2,7 +2,7 @@
 
 Securely control a remote docker daemon CLI using ssh forwarding, no SSL setup needed.
 
-##Install
+## Install
 
 If you want it available on your system run the following (you may need elevated privileges for this to work):
 
@@ -14,7 +14,7 @@ If you just want it lying around on your file system:
     git clone https://github.com/dvddarias/rdocker.git
     cd rdocker
 
-##Usage
+## Usage
 
 Lets assume you want to control the docker daemon on your `webserver.com` server from your local machine. You just run:
 
@@ -40,7 +40,7 @@ You can also interact with the remote daemon from any other terminal by using th
 
 To stop controlling the remote daemon and close the ssh forwarding, just exit the newly created bash session (press `Ctrl+D`).
 
-##Dependencies & Configuration
+## Dependencies & Configuration
 
 **Basically None**. If you can login to your server over ssh and run docker commands this script should work out of the box.
 
@@ -50,7 +50,7 @@ Just remember:
 - On the remote host it uses: python(2/3), bash, and ssh but these are already installed on most linux distributions.
 - Needless to say you need `docker` installed on both computers ;).
 
-##How does it work
+## How does it work
 
 This is a general overview of how it works, feel free to check the script for further details:
 
