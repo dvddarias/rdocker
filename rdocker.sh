@@ -121,7 +121,7 @@ exec 3<>$PIPE; rm $PIPE
 # find a free port or use the provided one
 local_port=${local_port:-$(python -c "$find_port_code")}
 
-remote_script_path="/tmp/rdocker-forwarder.py"
+remote_script_path="/tmp/rdocker-$remote_port-forwarder.py"
 printf "$forwarder" | ssh $remote_host -o ControlPath=$control_path -L $local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
 CONNECTION_PID=$!
 # wait for it's output
