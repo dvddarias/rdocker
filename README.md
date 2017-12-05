@@ -27,10 +27,12 @@ To test the connection run:
 
 Check the `Name:` field it should have the remote hostname .... That's it!!!
 
-You could for example run `docker build` to build an image on the remote host and then `docker save -o myimage.tar image_name` to store it locally.
-Or run `docker exec -it container_name bash` to open a shell session on a remote container. Even bash auto-completion works ok.
+You could for example:
+- Run `docker build` to build an image on the remote host and then `docker save -o myimage.tar image_name` to store it locally.
+- Run `docker exec -it container_name bash` to open a shell session on a remote container. 
+- Run `rdocker user@webserver.com docker logs container_name -f --tail 10` to follow the log output of a container. 
 
-You can choose the local port the docker daemon will be forwarded to by passing it as the last argument:
+You can choose the local port the docker daemon will be forwarded to, by passing it as the last argument:
 
     rdocker user@webserver.com 9000
 
