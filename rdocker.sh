@@ -25,7 +25,7 @@ control_path="$HOME/.rdocker-master-`date +%s%N`"
 ssh ${remote_host} -nNf -o ControlMaster=yes -o ControlPath="${control_path}" -o ControlPersist=yes
 
 if [ ! -S "${control_path}" ]; then
-    exit
+    exit 1
 fi
 
 find_port_code="import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));print(s.getsockname()[1]);s.close()"
