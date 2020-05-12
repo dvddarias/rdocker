@@ -1,5 +1,6 @@
 #!/bin/bash
-# set -e
+set -e
+
 re='^[0-9]+$'
 if [[ $# -eq 0 || $1 == "-h" || $1 == "-help" ]]; then
     echo "Usage: rdocker [-h|-help] [user@]hostname [port] [cmd]"
@@ -10,6 +11,9 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "-help" ]]; then
     echo "    cmd             when provided, it is the only command run on the remote host (no bash session is created)"
     exit
 fi
+
+PYTHON_CLIENT=$(command -v python || command -v python3)
+PYTHON_REMOTE='$(command -v python || command -v python3)'
 
 #Extracting parameters
 remote_host=${1}
@@ -30,7 +34,7 @@ fi
 
 find_port_code="import socket;s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.bind(('', 0));print(s.getsockname()[1]);s.close()"
 
-remote_port=$(ssh ${remote_host} -o ControlPath=${control_path} python -c \"$find_port_code\")
+remote_port=$(ssh ${remote_host} -o ControlPath=${control_path} $PYTHON_REMOTE -c \"$find_port_code\")
 
 if [ -z $remote_port ]; then
     echo "ERROR: Failed to find a free port. This usually happens when python is not installed on the remote host."
@@ -116,13 +120,13 @@ if __name__ == \"__main__\":
 
 # find an unused local port
 # create a temporary named pipe and attach it to file descriptor 3
-PIPE=$(mktemp -u rdocXXX); mkfifo $PIPE
+PIPE=$(mktemp -u); mkfifo $PIPE
 exec 3<>$PIPE; rm $PIPE
 # find a free port or use the provided one
-local_port=${local_port:-$(python -c "$find_port_code")}
+local_port=${local_port:-$($PYTHON_CLIENT -c "$find_port_code")}
 
 remote_script_path="/tmp/rdocker-$remote_port-forwarder.py"
-printf "$forwarder" | ssh $remote_host -o ControlPath=$control_path -L $local_port:localhost:$remote_port "cat > ${remote_script_path}; exec python -u ${remote_script_path}" 1>&3 &
+printf "$forwarder" | ssh $remote_host -o ControlPath=$control_path -L $local_port:localhost:$remote_port "cat > ${remote_script_path}; exec $PYTHON_REMOTE -u ${remote_script_path}" 1>&3 &
 CONNECTION_PID=$!
 # wait for it's output
 read -u 3 -d . line
